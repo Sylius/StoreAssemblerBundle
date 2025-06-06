@@ -1,0 +1,78 @@
+
+    // --------------------------------------------------
+        // 2) Rejestracja komend konsolowych
+        // --------------------------------------------------
+        // Wszystkie klasy z katalogu src/Command będą oznaczone tagiem “console.command”
+        $services
+        ->load('Sylius\\DXBundle\\Command\\', __DIR__ . '/../Command')
+        ->tag('console.command');
+        
+        // Jeśli któraś komenda wymaga ręcznej konfiguracji (np. wstrzyknięcia parametru),
+    // możemy ją zadeklarować osobno. Przykład dla StoreLoaderCommand:
+        $services
+        ->set(StoreLoaderCommand::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        ->arg('$pluginBuilder', service(PluginBuilder::class))
+        ->arg('$fixtureBuilder', service(FixtureBuilder::class))
+        ->arg('$themeBuilder', service(ThemeBuilder::class))
+        ->tag('console.command');
+        
+        $services
+        ->set(ThemePrepareCommand::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        ->arg('$configProvider', service(StoreConfigProviderInterface::class))
+        ->tag('console.command');
+        
+        $services
+        ->set(PluginManagerCommand::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        ->arg('$configProvider', service(StoreConfigProviderInterface::class))
+        ->tag('console.command');
+        
+        // --------------------------------------------------
+        // 3) Rejestracja builderów (serwisy pomocnicze)
+        // --------------------------------------------------
+        $services
+        ->set(PluginBuilder::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        // (w razie potrzeby dodaj inne argumenty, np. ProcessRunner lub LoggerInterface)
+        ;
+        
+        $services
+        ->set(FixtureBuilder::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        ->arg('$configProvider', service(StoreConfigProviderInterface::class))
+        ;
+        
+        $services
+        ->set(ThemeBuilder::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        ->arg('$configProvider', service(StoreConfigProviderInterface::class))
+        ;
+        
+        // --------------------------------------------------
+        // 4) Rejestracja providera konfiguracji („StoreConfigProvider”)
+        // --------------------------------------------------
+        // Implementacja ConfigProvider–>JsonStoreConfigProvider
+        $services
+        ->set(JsonStoreConfigProvider::class)
+        ->arg('$projectDir', '%kernel.project_dir%')
+        // (jeśli potrzebujesz wstrzyknąć inne parametry, zrób to tutaj)
+        ;
+        
+        $services
+        ->alias(StoreConfigProviderInterface::class, JsonStoreConfigProvider::class)
+        ->public();
+        
+        // --------------------------------------------------
+        // 5) Inne serwisy pomocnicze (opcjonalne)
+        // --------------------------------------------------
+        // Jeśli masz dodatkowe serwisy, np. ProcessRunner, CacheManager czy logger,
+    // zarejestruj je analogicznie. Przykład:
+        //
+        // $services
+        //     ->set(\Sylius\DXBundle\Service\ProcessRunner::class)
+        //         ->arg('$projectDir', '%kernel.project_dir%')
+        //         ->autowire()
+        //         ->autoconfigure();
+        //
