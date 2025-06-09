@@ -11,7 +11,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
@@ -22,20 +21,11 @@ class PluginPrepare extends Command
 {
     use ConfigTrait;
 
-    protected static $defaultName = 'sylius:dx:plugin:prepare';
-
     private SymfonyStyle $io;
 
-    public function __construct(#[Autowire('%kernel.project_dir%')] private readonly string $projectDir)
+    public function __construct(private readonly string $projectDir)
     {
         parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this
-            ->addArgument('store', InputOption::VALUE_OPTIONAL, 'Name of the store directory under store-preset/')
-        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -51,20 +41,30 @@ class PluginPrepare extends Command
 
         $this->io->section('[Plugin Preparer] Installing plugins');
         foreach ($plugins as $package => $version) {
-            // Necessary to resolve Symfony recipes correctly
             Process::fromShellCommandline("composer require $package:$version --no-scripts --no-interaction")
-                ->setTimeout(0)
-                ->mustRun(fn($type, $buffer) => $output->write($buffer));
-            // Install dev-booster version for development purposes
-            Process::fromShellCommandline("composer require $package:dev-booster --no-scripts --no-interaction")
                 ->setTimeout(0)
                 ->mustRun(fn($type, $buffer) => $output->write($buffer));
         }
 
-        $this->runCommand(['composer', 'require', 'intervention/image']);
+        $this->io->info('Require intervention/image for image processing');
+        $this->runCommand(['composer', 'require', 'intervention/image:^3.1', '--no-interaction']);
 
         $this->io->title('[Plugin Preparer] Running Rector');
-        $this->runCommand(['vendor/bin/rector', 'process', 'src']);
+        $rectorConfigPath = $this->projectDir . '/vendor/sylius/dx/config/rector.php';
+
+        $exitCode = $this->runCommand([
+            'vendor/bin/rector',
+            'process',
+            'src',
+            '--config=' . $rectorConfigPath,
+        ]);
+
+        if ($exitCode !== 0) {
+            $this->io->error(sprintf('Rector zakończył się kodem %d', $exitCode));
+            return Command::FAILURE;
+        }
+
+        $this->io->success('Rector zakończony pomyślnie.');
 
         $this->io->title('[Plugin Preparer] Running assets installation');
         $this->runCommand(['bin/console', 'assets:install', '-n']);

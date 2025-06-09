@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Command;
+namespace Sylius\DXBundle\Command;
 
-use Throwable;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -20,20 +19,16 @@ use Symfony\Component\Yaml\Yaml;
     name: 'sylius:dx:theme:prepare',
     description: 'Load themes from configuration and generate stylesheets (SCSS + logo assets + button styles)',
 )]
-class ThemePrepare extends Command
+class ThemePrepareCommand extends Command
 {
     use ConfigTrait;
 
     private const SHOP_LOGO_HEIGHT_FACTOR = 70;
 
-    private string $projectDir;
-
     private SymfonyStyle $io;
 
-    public function __construct(KernelInterface $kernel)
-    {
+    public function __construct(private readonly string $projectDir){
         parent::__construct();
-        $this->projectDir = $kernel->getProjectDir();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -49,7 +44,7 @@ class ThemePrepare extends Command
         try {
             $raw = file_get_contents($configPath);
             $data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $this->io->error('Invalid JSON in store-preset.json: ' . $e->getMessage());
             return Command::FAILURE;
         }

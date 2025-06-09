@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Command\Fixture;
+namespace Sylius\DXBundle\Command\Fixture;
 
-use App\Command\ConfigTrait;
+use Sylius\DXBundle\Command\ConfigTrait;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,13 +17,12 @@ use Symfony\Component\Process\Process;
     name: 'sylius:dx:fixture:prepare',
     description: 'Prepare and load fixtures for a specific store',
 )]
-class FixturePrepare extends Command
+class FixturePrepareCommand extends Command
 {
     use ConfigTrait;
 
-    public function __construct(
-        #[Autowire('%kernel.project_dir%')] private readonly string $projectDir,
-    ){
+    public function __construct(private readonly string $projectDir)
+    {
         parent::__construct();
     }
 
