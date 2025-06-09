@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sylius\DXBundle\Command\Plugin;
 
 use Sylius\DXBundle\Command\ConfigTrait;
-use Sylius\DXBundle\Configurator\ConfiguratorInterface;
 use Sylius\DXBundle\Util\ManifestLocator;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -38,17 +37,34 @@ final class PluginInstallCommand extends Command
         $this->validateStore($store);
 
         $plugins = $this->getPluginsByStore($store);
-
         if (empty($plugins)) {
             $this->io->warning('No plugins defined for this store. Nothing to do.');
             return Command::SUCCESS;
         }
 
+        // --- Validation: ensure each plugin has a manifest definition folder ---
+        $missing = [];
+        foreach ($plugins as $package => $version) {
+            [$vendor, $name] = explode('/', $package, 2);
+            $path = $this->projectDir . '/config/plugins/' . $vendor . '/' . $name . '/' . $version;
+            if (!is_dir($path)) {
+                $missing[] = "$package@$version";
+            }
+        }
+        if (!empty($missing)) {
+            $this->io->error(
+                'Missing plugin definitions for: ' . implode(', ', $missing) . ".\n"
+                . 'Please ensure each listed plugin has a corresponding folder under config/plugins/{vendor}/{plugin}/{version}.'
+            );
+            return Command::FAILURE;
+        }
+        // ----------------------------------------------------------------------
+
         $this->io->title('[Plugin Installer] Installing plugins');
 
         foreach (array_keys($plugins) as $pluginName) {
             $manifestPath = ManifestLocator::locate($this->projectDir, $pluginName);
-            $manifest = json_decode(file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
+            $manifest = json_decode((string) file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
 
             foreach ($manifest['steps'] ?? [] as $cmd) {
                 $this->io->section('[PluginPrepare] Running shell step');
@@ -74,19 +90,5 @@ final class PluginInstallCommand extends Command
         $this->io->success('[Plugin Installer] Wszystkie pluginy zostały przetworzone.');
 
         return Command::SUCCESS;
-    }
-
-    private function runShellCommand(string $command): int
-    {
-        // Używamy Process::fromShellCommandline, żeby łatwo przekazać ciąg z parametrami
-        $process = Process::fromShellCommandline($command, $this->projectDir);
-        $process
-            ->setTty(Process::isTtySupported())
-            ->setTimeout(0)
-            ->mustRun(function (string $type, string $buffer) {
-                $this->io->write($buffer);
-            });
-
-        return $process->getExitCode();
     }
 }
