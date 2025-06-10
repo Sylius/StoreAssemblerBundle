@@ -1,7 +1,7 @@
 {
-    "name": "sylius/dx",
+    "name": "sylius/store-assembler",
     "type": "symfony-bundle",
-    "description": "Sylius DX – tools and utilities to improve the developer experience in Sylius projects.",
+    "description": "Sylius Store Assembler – tools and utilities to improve the developer experience in Sylius projects.",
     "license": "MIT",
     "authors": [
         {
@@ -19,23 +19,23 @@
     },
     "autoload": {
         "psr-4": {
-            "Sylius\\DXBundle\\": "src/"
+            "Sylius\\StoreAssemblerBundle\\": "src/"
         }
     },
-    "bin": ["bin/store-loader.sh"],
+    "bin": ["bin/store-assembler.sh"],
     "extra": {
         "symfony": {
             "bundle": [
-                "Sylius\\DXBundle\\SyliusDXBundle"
+                "Sylius\\StoreAssemblerBundle\\SyliusStoreAssemblerBundle"
             ]
         }
     },
     "scripts": {
         "post-install-cmd": [
-            "Sylius\\DXBundle\\Composer\\Installer::createStoreLoaderSymlink"
+            "Sylius\\StoreAssemblerBundle\\Composer\\Installer::createStoreLoaderSymlink"
         ],
         "post-update-cmd": [
-            "Sylius\\DXBundle\\Composer\\Installer::createStoreLoaderSymlink"
+            "Sylius\\StoreAssemblerBundle\\Composer\\Installer::createStoreLoaderSymlink"
         ]
     },
     "minimum-stability": "stable"

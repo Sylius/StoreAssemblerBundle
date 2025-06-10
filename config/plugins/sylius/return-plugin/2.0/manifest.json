@@ -1,0 +1,13 @@
+{
+    "rector-sets": [
+        "Sylius\\SyliusRector\\Set\\SyliusPlus::RETURN_PLUGIN"
+    ],
+    "configurators": [
+        {
+            "class": "Sylius\\StoreAssemblerBundle\\Configurator\\YamlNodeConfigurator",
+            "file": "config/packages/sylius_return_plugin.yaml",
+            "key": "sylius_return.pdf_generator.enabled",
+            "value": false
+        }
+    ]
+}

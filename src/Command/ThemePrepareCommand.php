@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Command;
+namespace Sylius\StoreAssemblerBundle\Command;
 
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -16,14 +16,14 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Yaml\Yaml;
 
 #[AsCommand(
-    name: 'sylius:dx:theme:prepare',
+    name: 'sylius:store-assembler:theme:prepare',
     description: 'Load themes from configuration and generate stylesheets (SCSS + logo assets + button styles)',
 )]
 class ThemePrepareCommand extends Command
 {
     use ConfigTrait;
 
-    private const SHOP_LOGO_HEIGHT_FACTOR = 70;
+    private const int SHOP_LOGO_HEIGHT_FACTOR = 70;
 
     private SymfonyStyle $io;
 

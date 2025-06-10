@@ -1,0 +1,5 @@
+{
+    "rector-sets": [
+        "Sylius\\SyliusRector\\Set\\SyliusPlus::LOYALTY_PLUGIN"
+    ]
+}

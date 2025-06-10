@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Command\Plugin;
+namespace Sylius\StoreAssemblerBundle\Command\Plugin;
 
-use Sylius\DXBundle\Command\ConfigTrait;
-use Sylius\DXBundle\Util\ManifestLocator;
+use Sylius\StoreAssemblerBundle\Command\ConfigTrait;
+use Sylius\StoreAssemblerBundle\Util\ManifestLocator;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
-    name: 'sylius:dx:plugin:install',
+    name: 'sylius:store-assembler:plugin:install',
     description: 'Install Sylius plugins according to their manifest.json'
 )]
 final class PluginInstallCommand extends Command
@@ -42,28 +42,38 @@ final class PluginInstallCommand extends Command
             return Command::SUCCESS;
         }
 
-        // --- Validation: ensure each plugin has a manifest definition folder ---
-        $missing = [];
+        // Check for unsupported plugins (no manifest available)
+        $supported = [];
+        $unsupported = [];
         foreach ($plugins as $package => $version) {
-            [$vendor, $name] = explode('/', $package, 2);
-            $path = $this->projectDir . '/config/plugins/' . $vendor . '/' . $name . '/' . $version;
-            if (!is_dir($path)) {
-                $missing[] = "$package@$version";
+            try {
+                // Validate manifest exists
+                ManifestLocator::locate($this->projectDir, $package);
+                $supported[$package] = $version;
+            } catch (\RuntimeException $e) {
+                $unsupported[] = "$package@$version";
             }
         }
-        if (!empty($missing)) {
-            $this->io->error(
-                'Missing plugin definitions for: ' . implode(', ', $missing) . ".\n"
-                . 'Please ensure each listed plugin has a corresponding folder under config/plugins/{vendor}/{plugin}/{version}.'
+
+        if (!empty($unsupported)) {
+            $this->io->warning(
+                sprintf(
+                    'The following plugins are configured but not supported (missing manifest): %s.\n'.
+                    'To support them, add a manifest under config/plugins/{vendor}/{name}/{version} or remove them from store-preset.',
+                    implode(', ', $unsupported)
+                )
             );
-            return Command::FAILURE;
         }
-        // ----------------------------------------------------------------------
+
+        if (empty($supported)) {
+            $this->io->warning('No supported plugins to install after manifest validation.');
+            return Command::SUCCESS;
+        }
 
         $this->io->title('[Plugin Installer] Installing plugins');
 
-        foreach (array_keys($plugins) as $pluginName) {
-            $manifestPath = ManifestLocator::locate($this->projectDir, $pluginName);
+        foreach (array_keys($supported) as $packageName) {
+            $manifestPath = ManifestLocator::locate($this->projectDir, $packageName);
             $manifest = json_decode((string) file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
 
             foreach ($manifest['steps'] ?? [] as $cmd) {
@@ -79,7 +89,7 @@ final class PluginInstallCommand extends Command
                 }
 
                 $configurator = new $class();
-                if (!$configurator instanceof ConfiguratorInterface) {
+                if (!$configurator instanceof \Sylius\StoreAssemblerBundle\Configurator\ConfiguratorInterface) {
                     throw new \RuntimeException("{$class} must implement ConfiguratorInterface");
                 }
 
@@ -87,7 +97,7 @@ final class PluginInstallCommand extends Command
             }
         }
 
-        $this->io->success('[Plugin Installer] Wszystkie pluginy zostały przetworzone.');
+        $this->io->success('[Plugin Installer] All supported plugins have been processed.');
 
         return Command::SUCCESS;
     }

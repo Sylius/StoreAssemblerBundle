@@ -35,12 +35,10 @@ EOF
 BUILD=false
 DEPLOY=false
 
-# If no arguments, run both by default
 if [ $# -eq 0 ]; then
   BUILD=true
   DEPLOY=true
 else
-  # Parse arguments
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --build)
@@ -57,7 +55,6 @@ else
     esac
   done
 
-  # Require at least one valid flag if arguments were provided
   if ! $BUILD && ! $DEPLOY; then
     echo -e "${RED}Error:${RESET} You must specify at least --build or --deploy."
     usage
@@ -65,13 +62,13 @@ else
 fi
 
 # -----------------------------------------
-# 2) Determine project root (one level up from this script)
+# 2) Determine project root
 # -----------------------------------------
-PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_DIR="$(pwd)"
 STORE_PRESET_FILE="$PROJECT_DIR/store-preset/store-preset.json"
 
 # -----------------------------------------
-# 3) Retrieve store name from store-preset.json
+# 3) Retrieve store name
 # -----------------------------------------
 if [ -f "$STORE_PRESET_FILE" ]; then
   STORE_NAME=$(php -r "echo json_decode(file_get_contents('$STORE_PRESET_FILE'), true)['name'] ?? '';"
@@ -81,41 +78,42 @@ else
 fi
 
 # -----------------------------------------
-# 4) If BUILD, execute BUILD steps
+# 4) BUILD
 # -----------------------------------------
 if $BUILD; then
   echo -e "${BLUE}${BOLD}=== [Store Loader] BUILD ===${RESET}"
   if [ -z "$STORE_NAME" ]; then
-    echo -e "${YELLOW}Warning:${RESET} Missing store-preset or 'name' key in $STORE_PRESET_FILE."
+    echo -e "${RED}Error:${RESET} Missing store-preset or 'name' key in $STORE_PRESET_FILE."
     echo -e "To run BUILD, you must provide a valid store-preset/store-preset.json with a 'name'."
-    echo -e "${GREEN}BUILD completed (no-op).${RESET}"
-  else
-    echo -e "Creating store: ${BOLD}$STORE_NAME${RESET}"
-    echo
-
-    echo -e "${BLUE}[Store Loader] PLUGINS${RESET}"
-    php bin/console sylius:dx:plugin:prepare
-    php bin/console cache:clear --no-warmup
-    php bin/console cache:warmup
-    php bin/console sylius:dx:plugin:install
-
-    echo
-    echo -e "${BLUE}[Store Loader] FIXTURES${RESET}"
-    php bin/console sylius:dx:fixture:prepare
-
-    echo
-    echo -e "${BLUE}[Store Loader] THEMES${RESET}"
-    php bin/console cache:clear --no-warmup
-    php bin/console cache:warmup
-    php bin/console sylius:dx:theme:prepare
-
-    echo
-    echo -e "${GREEN}[Store Loader] BUILD completed successfully.${RESET}"
+    exit 1
   fi
+
+  echo -e "Creating store: ${BOLD}$STORE_NAME${RESET}"
+  echo
+
+  echo -e "${BLUE}[Store Loader] PLUGINS${RESET}"
+  php bin/console sylius:store-assembler:plugin:prepare
+  php bin/console assets:install --symlink --relative public
+  php bin/console cache:clear --no-warmup
+  php bin/console cache:warmup
+  php bin/console sylius:store-assembler:plugin:install
+
+  echo
+  echo -e "${BLUE}[Store Loader] FIXTURES${RESET}"
+  php bin/console sylius:store-assembler:fixture:prepare
+
+  echo
+  echo -e "${BLUE}[Store Loader] THEMES${RESET}"
+  php bin/console cache:clear --no-warmup
+  php bin/console cache:warmup
+  php bin/console sylius:store-assembler:theme:prepare
+
+  echo
+  echo -e "${GREEN}[Store Loader] BUILD completed successfully.${RESET}"
 fi
 
 # -----------------------------------------
-# 5) If DEPLOY, execute DEPLOY steps
+# 5) DEPLOY
 # -----------------------------------------
 if $DEPLOY; then
   echo
@@ -135,7 +133,7 @@ if $DEPLOY; then
   else
     echo
     echo -e "${BLUE}[Store Loader] FIXTURES${RESET}"
-    php bin/console sylius:dx:fixture:load
+    php bin/console sylius:store-assembler:fixture:load
   fi
 
   echo

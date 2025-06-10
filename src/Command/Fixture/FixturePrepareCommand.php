@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Command\Fixture;
+namespace Sylius\StoreAssemblerBundle\Command\Fixture;
 
-use Sylius\DXBundle\Command\ConfigTrait;
+use Sylius\StoreAssemblerBundle\Command\ConfigTrait;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,7 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
-    name: 'sylius:dx:fixture:prepare',
+    name: 'sylius:store-assembler:fixture:prepare',
     description: 'Prepare and load fixtures for a specific store',
 )]
 class FixturePrepareCommand extends Command

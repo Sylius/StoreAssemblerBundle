@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Command;
+namespace Sylius\StoreAssemblerBundle\Command;
 
 use RuntimeException;
 use Exception;

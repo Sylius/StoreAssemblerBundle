@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Configurator;
+namespace Sylius\StoreAssemblerBundle\Configurator;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
 

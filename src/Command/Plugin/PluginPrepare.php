@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\Command\Plugin;
+namespace Sylius\StoreAssemblerBundle\Command\Plugin;
 
-use Sylius\DXBundle\Command\ConfigTrait;
+use Sylius\StoreAssemblerBundle\Command\ConfigTrait;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
-    name: 'sylius:dx:plugin:prepare',
+    name: 'sylius:store-assembler:plugin:prepare',
     description: 'Require Sylius plugins in one go'
 )]
 class PluginPrepare extends Command
@@ -36,21 +35,49 @@ class PluginPrepare extends Command
         $this->validateStore($store);
         $plugins = $this->getPluginsByStore($store);
 
-        Process::fromShellCommandline('composer config extra.symfony.allow-contrib true')->setTimeout(0)->run();
-        Process::fromShellCommandline('composer config repositories.sylius composer https://sylius.repo.packagist.com/sylius/')->setTimeout(0)->run();
+        // Validate manifest file exists for each declared plugin, trimming semver operators
+        foreach ($plugins as $package => $version) {
+            [$vendor, $name] = explode('/', $package, 2);
+
+            // Strip leading semver operators (e.g. ^, ~, >=) to get directory name
+            $dirVersion = preg_replace('/^[^0-9]*/', '', $version);
+            $manifestDir = rtrim($this->projectDir, '/\\') . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/{$dirVersion}";
+            $manifestFile = $manifestDir . '/manifest.json';
+
+            if (!is_file($manifestFile)) {
+                $this->io->error(sprintf(
+                    'Plugin "%s"@"%s" is configured but not supported: missing manifest at "%s".',
+                    $package,
+                    $version,
+                    $manifestDir
+                ));
+
+                return Command::FAILURE;
+            }
+        }
+
+        // Configure composer for Sylius plugins
+        Process::fromShellCommandline('composer config extra.symfony.allow-contrib true')
+            ->setTimeout(0)
+            ->run();
+        Process::fromShellCommandline('composer config repositories.sylius composer https://sylius.repo.packagist.com/sylius/')
+            ->setTimeout(0)
+            ->run();
 
         $this->io->section('[Plugin Preparer] Installing plugins');
         foreach ($plugins as $package => $version) {
-            Process::fromShellCommandline("composer require $package:$version --no-scripts --no-interaction")
+            Process::fromShellCommandline(
+                sprintf('composer require %s:%s --no-scripts --no-interaction', $package, $version)
+            )
                 ->setTimeout(0)
-                ->mustRun(fn($type, $buffer) => $output->write($buffer));
+                ->mustRun(fn(string $type, string $buffer) => $output->write($buffer));
         }
 
         $this->io->info('Require intervention/image for image processing');
         $this->runCommand(['composer', 'require', 'intervention/image:^3.1', '--no-interaction']);
 
         $this->io->title('[Plugin Preparer] Running Rector');
-        $rectorConfigPath = $this->projectDir . '/vendor/sylius/dx/config/rector.php';
+        $rectorConfigPath = $this->projectDir . '/vendor/sylius/store-assembler/config/rector.php';
 
         $exitCode = $this->runCommand([
             'vendor/bin/rector',
@@ -65,9 +92,6 @@ class PluginPrepare extends Command
         }
 
         $this->io->success('Rector zakończony pomyślnie.');
-
-        $this->io->title('[Plugin Preparer] Running assets installation');
-        $this->runCommand(['bin/console', 'assets:install', '-n']);
 
         $this->io->success('[Plugin Preparer] Plugins installed successfully.');
 

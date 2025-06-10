@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace Sylius\DXBundle\DependencyInjection;
+namespace Sylius\StoreAssemblerBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-final class SyliusDXExtension extends Extension
+final class SyliusStoreAssemblerExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
