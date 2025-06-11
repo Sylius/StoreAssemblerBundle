@@ -9,7 +9,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Process\Process;
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 
 #[AsCommand(
     name: 'sylius:store-assembler:fixture:prepare',
@@ -34,40 +35,24 @@ class FixturePrepareCommand extends Command
 
         $io->section('[Fixture Loader] Preparing fixtures suite');
 
-        $result = copy($fixturesPath, $this->projectDir . '/config/packages/fixtures.yaml');
-        if (!$result) {
-            $io->error(sprintf(
-                'Failed to copy fixtures from %s to %s',
-                $fixturesPath,
-                $this->projectDir . '/config/packages/fixtures.yaml'
-            ));
+        $filesystem = new Filesystem();
+        $target = $this->projectDir . '/config/packages/fixtures.yaml';
+        try {
+            $filesystem->copy($fixturesPath, $target, true);
+        } catch (IOExceptionInterface $exception) {
+            $io->error(sprintf('Failed to copy fixtures file: %s', $exception->getMessage()));
             return Command::FAILURE;
         }
 
         $imagesDir = sprintf('%s/store-preset/fixtures/images', $this->projectDir);
         if (is_dir($imagesDir)) {
             $io->section('Copying images');
-
             $destinationDir = $this->projectDir . '/var/fixture_img';
-
-            if (!is_dir($destinationDir)) {
-                if (!mkdir($destinationDir, 0777, true) && !is_dir($destinationDir)) {
-                    $io->error(sprintf('Failed to create directory %s', $destinationDir));
-                    return Command::FAILURE;
-                }
-            }
-
-            $process = Process::fromShellCommandline(sprintf(
-                'cp -r %s/* %s',
-                escapeshellarg($imagesDir),
-                escapeshellarg($destinationDir)
-            ));
-            $process->run(function ($type, $buffer) use ($io) {
-                $io->write($buffer);
-            });
-
-            if ($process->getExitCode() !== 0) {
-                $io->error('Failed to copy images.');
+            try {
+                $filesystem->mkdir($destinationDir);
+                $filesystem->mirror($imagesDir, $destinationDir);
+            } catch (IOExceptionInterface $exception) {
+                $io->error(sprintf('Failed to copy images: %s', $exception->getMessage()));
                 return Command::FAILURE;
             }
         } else {
