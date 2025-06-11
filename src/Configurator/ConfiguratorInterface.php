@@ -15,6 +15,7 @@ namespace Sylius\StoreAssemblerBundle\Configurator;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/** @experimental */
 interface ConfiguratorInterface
 {
     /**

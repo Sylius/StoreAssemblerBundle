@@ -5,6 +5,7 @@ namespace Sylius\StoreAssemblerBundle\Util;
 use Composer\InstalledVersions;
 use Composer\Semver\VersionParser;
 
+/** @experimental */
 final class ManifestLocator
 {
     /**

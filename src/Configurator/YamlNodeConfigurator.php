@@ -16,6 +16,7 @@ namespace Sylius\StoreAssemblerBundle\Configurator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Yaml\Yaml;
 
+/** @experimental */
 final class YamlNodeConfigurator implements ConfiguratorInterface
 {
     public function configure(SymfonyStyle $io, string $projectDir, array $options): void

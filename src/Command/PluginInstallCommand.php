@@ -18,6 +18,7 @@ use Symfony\Component\Process\Process;
     description: 'Install and configure Sylius plugins based on their manifest.json',
     hidden: true,
 )]
+/** @experimental */
 final class PluginInstallCommand extends Command
 {
     use ConfigTrait;

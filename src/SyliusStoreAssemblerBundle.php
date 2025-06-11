@@ -15,6 +15,7 @@ namespace Sylius\StoreAssemblerBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
+/** @experimental */
 final class SyliusStoreAssemblerBundle extends Bundle
 {
     public function getPath(): string

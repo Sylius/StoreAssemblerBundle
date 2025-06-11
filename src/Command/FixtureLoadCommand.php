@@ -16,6 +16,7 @@ use Symfony\Component\Process\Process;
     description: 'Load fixtures for the store',
     hidden: true,
 )]
+/** @experimental */
 class FixtureLoadCommand extends Command
 {
     use ConfigTrait;

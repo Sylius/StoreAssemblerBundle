@@ -17,6 +17,7 @@ use Symfony\Component\Yaml\Yaml;
     description: 'Prepare and configure themes for the store',
     hidden: true,
 )]
+/** @experimental */
 class ThemePrepareCommand extends Command
 {
     use ConfigTrait;

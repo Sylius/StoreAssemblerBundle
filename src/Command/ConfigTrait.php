@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sylius\StoreAssemblerBundle\Command;
 
+/** @experimental */
 trait ConfigTrait
 {
     public function getConfig(): array

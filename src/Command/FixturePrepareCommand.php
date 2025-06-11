@@ -17,6 +17,7 @@ use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
     description: 'Prepare fixtures for the store',
     hidden: true,
 )]
+/** @experimental */
 class FixturePrepareCommand extends Command
 {
     use ConfigTrait;
