@@ -2,6 +2,7 @@
 
 namespace Sylius\StoreAssemblerBundle\Util;
 
+use Composer\InstalledVersions;
 use Composer\Semver\VersionParser;
 
 final class ManifestLocator
@@ -32,23 +33,20 @@ final class ManifestLocator
             );
         }
 
-        // Read installed version from composer.lock
-        $lockPath = $projectDir . '/composer.lock';
-        if (!is_file($lockPath) || !is_readable($lockPath)) {
-            throw new \RuntimeException("composer.lock not found or unreadable at {$lockPath}");
+        if (!InstalledVersions::isInstalled("{$vendor}/{$name}")) {
+            throw new \RuntimeException(sprintf(
+                'Package "%s/%s" is not installed',
+                $vendor,
+                $name
+            ));
         }
-
-        $lockData = json_decode((string) file_get_contents($lockPath), true);
-        $installed = null;
-        foreach (array_merge($lockData['packages'] ?? [], $lockData['packages-dev'] ?? []) as $pkg) {
-            if (($pkg['name'] ?? '') === "{$vendor}/{$name}") {
-                $installed = $pkg['version'];
-                break;
-            }
-        }
-
-        if (!$installed) {
-            throw new \RuntimeException("Package {$vendor}/{$name} not found in composer.lock");
+        $installed = InstalledVersions::getVersion("{$vendor}/{$name}");
+        if ($installed === null) {
+            throw new \RuntimeException(sprintf(
+                'Unable to detect installed version for "%s/%s"',
+                $vendor,
+                $name
+            ));
         }
 
         // Normalize to major.minor
