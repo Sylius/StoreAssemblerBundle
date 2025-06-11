@@ -1,0 +1,24 @@
+ # Auto detect text files and perform LF normalization
+* text=auto
+
+# Ensure consistent EOL for various file types
+*.php text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.twig text eol=lf
+*.md text eol=lf
+
+# Binary files should be treated as-is
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+
+# Composer lock is not committed for libraries
+/composer.lock export-ignore
+
+# Ignore local env files in archives
+/.env.local export-ignore
