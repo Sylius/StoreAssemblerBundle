@@ -1,0 +1,5 @@
+{
+    "steps": [
+        "yarn add trix@^2.0.0 swiper@^11.2.6"
+    ]
+}
