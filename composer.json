@@ -4,9 +4,10 @@
     "description": "Sylius Store Assembler – tool to assemble Sylius stores from a set of configuration files.",
     "license": "MIT",
     "require": {
-        "php": ">=8.3",
+        "php": ">=8.2",
         "composer/semver": "^3.4",
         "symfony/console": "^6.0 || ^7.0",
+        "symfony/filesystem": "^6.0 || ^7.0",
         "symfony/framework-bundle": "^6.0 || ^7.0",
         "symfony/process": "^6.0 || ^7.0",
         "symfony/yaml": "^6.0 || ^7.0"
