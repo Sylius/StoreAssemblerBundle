@@ -61,7 +61,7 @@ final class ManifestLocator
         });
 
         // Sort descending: highest versions first
-        usort($dirs, fn($a, $b) => version_compare($b, $a));
+        usort($dirs, fn ($a, $b) => version_compare($b, $a));
 
         // Find first dir <= target
         foreach ($dirs as $ver) {

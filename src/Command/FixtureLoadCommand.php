@@ -47,7 +47,7 @@ class FixtureLoadCommand extends Command
         array $arguments,
         SymfonyStyle $io,
     ): Process {
-        $parts = array_merge(["bin/console", 'sylius:fixtures:load'], $arguments);
+        $parts = array_merge(['bin/console', 'sylius:fixtures:load'], $arguments);
         $process = Process::fromShellCommandline(
             implode(' ', $parts),
             $this->projectDir

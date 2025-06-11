@@ -9,6 +9,9 @@
 /.phpunit.cache/
 /coverage/
 
+# Ignore environment configuration files
+.php-cs-fixer.cache
+
 # Ignore IDE and editor configuration files
 /.idea/
 /.vscode/

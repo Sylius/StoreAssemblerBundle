@@ -75,7 +75,7 @@ final class PluginInstallCommand extends Command
             foreach ($manifest['steps'] ?? [] as $cmd) {
                 $this->io->section('[PluginPrepare] Running shell step');
                 Process::fromShellCommandline($cmd, $this->projectDir)
-                    ->run(fn($type, $buffer) => $this->io->write($buffer));
+                    ->run(fn ($type, $buffer) => $this->io->write($buffer));
             }
 
             foreach ($manifest['configurators'] ?? [] as $entry) {

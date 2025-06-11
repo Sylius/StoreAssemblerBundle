@@ -51,11 +51,11 @@ class ThemePrepareCommand extends Command
                 $this->io->warning(sprintf('SCSS theme file already exists, overwriting: %s', $themeFile));
             }
             $variables = $themeConfig['cssVariables'] ?? [];
-            $lines = [":root {"];
+            $lines = [':root {'];
             foreach ($variables as $name => $value) {
                 $lines[] = sprintf('    %s: %s;', $name, $value);
             }
-            $lines[] = "}";
+            $lines[] = '}';
 
             $btnColor = $variables['--bs-text-color'] ?? '#000';
             $btnBg = $variables['--bs-btn-bg'] ?? ($variables['--bs-primary'] ?? '#000');
@@ -64,8 +64,8 @@ class ThemePrepareCommand extends Command
             $btnActiveBg = $variables['--bs-primary'] ?? '#000';
             $btnDisabledBg = $variables['--bs-btn-bg'] ?? ($variables['--bs-primary'] ?? '#000');
 
-            $lines[] = "";
-            $lines[] = ".btn-primary {";
+            $lines[] = '';
+            $lines[] = '.btn-primary {';
             $lines[] = sprintf('    --bs-btn-color: %s;', $btnColor);
             $lines[] = sprintf('    --bs-btn-bg: %s;', $btnBg);
             $lines[] = sprintf('    --bs-btn-border-color: %s;', $btnBg);
@@ -80,7 +80,7 @@ class ThemePrepareCommand extends Command
             $lines[] = sprintf('    --bs-btn-disabled-color: %s;', $btnColor);
             $lines[] = sprintf('    --bs-btn-disabled-bg: %s;', $btnDisabledBg);
             $lines[] = sprintf('    --bs-btn-disabled-border-color: %s;', $btnDisabledBg);
-            $lines[] = "}";
+            $lines[] = '}';
 
             file_put_contents($themeFile, implode("\n", $lines) . "\n");
             $this->io->success(sprintf('Generated theme file with variables and .btn-primary: %s', $themeFile));
@@ -141,7 +141,7 @@ class ThemePrepareCommand extends Command
 
         $this->io->section('Building assets with Webpack Encore');
         $process = Process::fromShellCommandline('yarn encore dev', $this->projectDir);
-        $process->run(fn($type, $buffer) => $this->io->write($buffer));
+        $process->run(fn ($type, $buffer) => $this->io->write($buffer));
         if (!$process->isSuccessful()) {
             $this->io->error('Asset build failed.');
             return Command::FAILURE;
@@ -157,7 +157,7 @@ class ThemePrepareCommand extends Command
             $publicImagesDir = sprintf('%s/public/build/app/%s/images', $this->projectDir, $section);
             if (!is_dir($publicImagesDir)) {
                 Process::fromShellCommandline('mkdir -p ' . escapeshellarg($publicImagesDir), $this->projectDir)
-                    ->run(fn($type, $buffer) => $this->io->write($buffer));
+                    ->run(fn ($type, $buffer) => $this->io->write($buffer));
             }
 
             $basename = pathinfo($logoFilename, PATHINFO_FILENAME);
@@ -221,7 +221,7 @@ TWIG;
 
         file_put_contents($hooksConfigPath, Yaml::dump($hooksConfig, 8));
 
-        $process->run(fn($type, $buffer) => $this->io->write($buffer));
+        $process->run(fn ($type, $buffer) => $this->io->write($buffer));
 
         $this->io->success('[Theme Loader] Theme loading complete!');
 
@@ -233,7 +233,7 @@ TWIG;
         $publicImagesDir = sprintf('%s/public/build/app/%s/images', $this->projectDir, $section);
         if (!is_dir($publicImagesDir)) {
             Process::fromShellCommandline('mkdir -p ' . escapeshellarg($publicImagesDir), $this->projectDir)
-                ->run(fn($type, $buffer) => $this->io->write($buffer));
+                ->run(fn ($type, $buffer) => $this->io->write($buffer));
         }
     }
 

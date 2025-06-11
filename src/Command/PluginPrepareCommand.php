@@ -70,7 +70,7 @@ class PluginPrepareCommand extends Command
             );
             $process
                 ->setTimeout(0)
-                ->mustRun(fn(string $type, string $buffer) => $output->write($buffer));
+                ->mustRun(fn (string $type, string $buffer) => $output->write($buffer));
         }
 
         $this->io->title('[Plugin Preparer] Running Rector');
@@ -101,7 +101,7 @@ class PluginPrepareCommand extends Command
         $process
             ->setTty(Process::isTtySupported())
             ->setTimeout(0)
-            ->mustRun(fn(string $type, string $buffer) => $this->io->write($buffer));
+            ->mustRun(fn (string $type, string $buffer) => $this->io->write($buffer));
 
         return $process->getExitCode();
     }
