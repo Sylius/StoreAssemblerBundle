@@ -52,19 +52,23 @@ class PluginPrepareCommand extends Command
             }
         }
 
-        Process::fromShellCommandline(
-            'composer config extra.symfony.allow-contrib true',
-        )->run();
+        (new Process(
+            ['composer', 'config', 'extra.symfony.allow-contrib', 'true'],
+            $this->projectDir
+        ))->run();
 
-        Process::fromShellCommandline(
-            'composer config repositories.sylius composer https://sylius.repo.packagist.com/sylius/',
-        )->run();
+        (new Process(
+            ['composer', 'config', 'repositories.sylius', 'composer', 'https://sylius.repo.packagist.com/sylius/'],
+            $this->projectDir
+        ))->run();
 
         $this->io->section('[Plugin Preparer] Installing plugins');
         foreach ($plugins as $package => $version) {
-            Process::fromShellCommandline(
-                sprintf('composer require %s:%s --no-scripts --no-interaction', $package, $version)
-            )
+            $process = new Process(
+                ['composer', 'require', sprintf('%s:%s', $package, $version), '--no-scripts', '--no-interaction'],
+                $this->projectDir
+            );
+            $process
                 ->setTimeout(0)
                 ->mustRun(fn(string $type, string $buffer) => $output->write($buffer));
         }
@@ -80,11 +84,11 @@ class PluginPrepareCommand extends Command
         ]);
 
         if ($exitCode !== 0) {
-            $this->io->error(sprintf('Rector zakończył się kodem %d', $exitCode));
+            $this->io->error(sprintf('Rector exited with code %d', $exitCode));
             return Command::FAILURE;
         }
 
-        $this->io->success('Rector zakończony pomyślnie.');
+        $this->io->success('Rector completed successfully.');
 
         $this->io->success('[Plugin Preparer] Plugins installed successfully.');
 
