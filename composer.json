@@ -25,5 +25,15 @@
             ]
         }
     },
+    "require-dev": {
+        "phpstan/phpstan": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "rector/rector": "^2.0"
+    },
+    "scripts": {
+        "rector": "vendor/bin/rector process src --config=config/rector.php",
+        "cs": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+        "phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon"
+    },
     "minimum-stability": "stable"
 }
