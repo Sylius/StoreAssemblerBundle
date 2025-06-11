@@ -1,1 +1,24 @@
-/vendor
+# Ignore Composer dependencies
+/vendor/
+
+# Ignore Composer lock file for libraries
+/composer.lock
+
+# Ignore PHPUnit test artifacts
+/phpunit.result.cache
+/.phpunit.cache/
+/coverage/
+
+# Ignore environment configuration files
+.php-cs-fixer.cache
+
+# Ignore IDE and editor configuration files
+/.idea/
+/.vscode/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log

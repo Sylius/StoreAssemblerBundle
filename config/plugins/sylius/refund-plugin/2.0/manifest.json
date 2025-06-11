@@ -1,0 +1,10 @@
+{
+    "configurators": [
+        {
+            "class": "Sylius\\StoreAssemblerBundle\\Configurator\\YamlNodeConfigurator",
+            "file":  "config/packages/sylius_refund.yaml",
+            "key":   "sylius_refund.pdf_generator.enabled",
+            "value": false
+        }
+    ]
+}
