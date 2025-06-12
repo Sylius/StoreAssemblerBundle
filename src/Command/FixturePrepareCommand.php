@@ -48,7 +48,7 @@ class FixturePrepareCommand extends Command
         $imagesDir = sprintf('%s/store-preset/fixtures/images', $this->projectDir);
         if (is_dir($imagesDir)) {
             $io->section('Copying images');
-            $destinationDir = $this->projectDir . '/var/fixture_img';
+            $destinationDir = $this->projectDir . '/fixtures';
             try {
                 $filesystem->mkdir($destinationDir);
                 $filesystem->mirror($imagesDir, $destinationDir);
