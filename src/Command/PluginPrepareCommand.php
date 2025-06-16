@@ -58,11 +58,6 @@ class PluginPrepareCommand extends Command
             $this->projectDir
         ))->run();
 
-        (new Process(
-            ['composer', 'config', 'repositories.sylius', 'composer', 'https://sylius.repo.packagist.com/sylius/'],
-            $this->projectDir
-        ))->run();
-
         $this->io->section('[Plugin Preparer] Installing plugins');
         foreach ($plugins as $package => $version) {
             $process = new Process(
