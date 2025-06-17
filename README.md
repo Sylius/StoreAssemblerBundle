@@ -46,16 +46,16 @@ You can find example presets in the [Sylius StorePreset repository](https://gith
 Add the following targets to your `Makefile` for common tasks:
 
 ```makefile
-store-assembler:
-    vendor/bin/store-assembler
+sylius-store-assembler:
+    vendor/bin/sylius-store-assembler
 
-store-assembler-fixtures:
+sylius-store-assembler-fixtures:
     bin/console sylius:store-assembler:fixture:prepare
     bin/console cache:clear
     bin/console cache:warmup
     bin/console sylius:store-assembler:fixture:load
 
-store-assembler-theme:
+sylius-store-assembler-theme:
     bin/console sylius:store-assembler:theme:prepare
     bin/console cache:clear
     bin/console cache:warmup
@@ -64,7 +64,7 @@ store-assembler-theme:
 Run all steps with:
 
 ```bash
-make store-assembler
+make sylius-store-assembler
 ```
 
 For granular control, use individual console commands:
