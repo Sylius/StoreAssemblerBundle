@@ -3,25 +3,27 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 #   Script: store-assembler
-#   Orchestrates the BUILD and/or DEPLOY steps for a Sylius store.
+#   Orchestrates the BUILD, DEPLOY, and GET-PRESET operations for a Sylius store.
+#   Supports downloading and extracting store presets by name.
 # -----------------------------------------------------------------------------
 
 # Color definitions
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-RESET='\033[0m'
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+BLUE=$'\033[0;34m'
+BOLD=$'\033[1m'
+RESET=$'\033[0m'
 
 usage() {
   cat <<EOF
-${BOLD}Usage:${RESET} $(basename "$0") [--build] [--deploy]
+${BOLD}Usage:${RESET} $(basename "$0") [--build] [--deploy] [--get-preset <preset-name>]
 
   --build    Execute store build steps (plugins, fixtures, themes)
   --deploy   Execute store deployment steps (drop/create DB, update schema, load fixtures)
+  --get-preset <preset-name>   Download and extract a store-preset by name
 
-If no flags are provided, both sections will be executed sequentially.
+If no flags are provided, both --build and --deploy sections will be executed sequentially.
 
 Example:
   $(basename "$0") --build --deploy
@@ -34,6 +36,8 @@ EOF
 # -----------------------------------------
 BUILD=false
 DEPLOY=false
+GET_PRESET=false
+PRESET_NAME=""
 
 if [ $# -eq 0 ]; then
   BUILD=true
@@ -49,17 +53,71 @@ else
         DEPLOY=true
         shift
         ;;
+      --get-preset)
+        GET_PRESET=true
+        if [ -n "${2:-}" ]; then
+          PRESET_NAME="$2"
+          shift 2
+        else
+          echo -e "${RED}Error:${RESET} Missing preset name for --get-preset."
+          usage
+        fi
+        ;;
       *)
         usage
         ;;
     esac
   done
 
-  if ! $BUILD && ! $DEPLOY; then
-    echo -e "${RED}Error:${RESET} You must specify at least --build or --deploy."
+  if ! $BUILD && ! $DEPLOY && ! $GET_PRESET; then
+    echo -e "${RED}Error:${RESET} You must specify at least --build, --deploy, or --get-preset."
     usage
   fi
 fi
+
+# -----------------------------------------
+# Preset download logic
+# -----------------------------------------
+if $GET_PRESET; then
+  # BEGIN preset download logic
+  REPO="Sylius/StorePreset"
+  BRANCH="main"
+  TARGET_DIR="store-presets"
+  OUTPUT_DIR="store-preset"
+  ZIP_URL="https://github.com/$REPO/archive/refs/heads/$BRANCH.zip"
+  TMP_DIR=$(mktemp -d)
+  ZIP_FILE="$TMP_DIR/archive.zip"
+
+  echo -e "${BLUE}Downloading $REPO#$BRANCH → $TARGET_DIR/${RESET}"
+  curl -L "$ZIP_URL" -o "$ZIP_FILE"
+
+  echo -e "${BLUE}Extracting archive...${RESET}"
+  unzip -q "$ZIP_FILE" -d "$TMP_DIR"
+
+  EXTRACTED_DIR="$TMP_DIR/$(basename "$REPO")-$BRANCH"
+
+  echo -e "${BLUE}Cleaning any existing $OUTPUT_DIR directory...${RESET}"
+  rm -rf "$OUTPUT_DIR"
+
+  if [ ! -d "$EXTRACTED_DIR/$TARGET_DIR/$PRESET_NAME" ]; then
+    echo -e "${RED}Error:${RESET} preset '$PRESET_NAME' not found in $REPO/$TARGET_DIR." >&2
+    echo -e "${YELLOW}Available presets:${RESET}" >&2
+    for d in "$EXTRACTED_DIR/$TARGET_DIR"/*; do
+      [ -d "$d" ] && echo -e "  - ${YELLOW}$(basename "$d")${RESET}" >&2
+    done
+    exit 1
+  fi
+
+  echo -e "${GREEN}Moving preset '$PRESET_NAME' to $OUTPUT_DIR...${RESET}"
+  mv "$EXTRACTED_DIR/$TARGET_DIR/$PRESET_NAME" "$OUTPUT_DIR"
+
+  echo -e "${BLUE}Removing temporary files...${RESET}"
+  rm -rf "$TMP_DIR"
+
+  echo -e "${GREEN}Done!${RESET}"
+  exit 0
+fi
+# END preset download logic
 
 # -----------------------------------------
 # 2) Determine project root
