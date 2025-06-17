@@ -31,6 +31,7 @@
         "rector/rector": "^2.0"
     },
     "scripts": {
+        "store-assembler:get-store-preset": "bash bin/get-store-preset",
         "rector": "vendor/bin/rector process src --config=config/rector.php",
         "cs": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
         "phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon"
