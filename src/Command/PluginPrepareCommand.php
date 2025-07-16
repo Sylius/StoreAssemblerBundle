@@ -11,7 +11,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 use Sylius\StoreAssemblerBundle\Util\ManifestLocator;
-use Sylius\StoreAssemblerBundle\Util\ComposerPackageHelper;
 use Composer\InstalledVersions;
 
 #[AsCommand(
@@ -68,8 +67,7 @@ class PluginPrepareCommand extends Command
         }
 
         $this->io->title('[Plugin Preparer] Running Rector');
-        $packageName = ComposerPackageHelper::getOwnComposerName();
-        $assemblerBundlePath = InstalledVersions::getInstallPath($packageName);
+        $assemblerBundlePath = InstalledVersions::getInstallPath('sylius/store-assembler-bundle');
         if ($assemblerBundlePath === null) {
             throw new \RuntimeException('Cannot locate sylius/store-assembler-bundle package in vendor directory.');
         }
