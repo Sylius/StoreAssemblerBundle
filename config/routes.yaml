@@ -1,0 +1,9 @@
+store_assembler_home:
+    path: /store-assembler
+    methods: [GET]
+    controller: Sylius\StoreAssemblerBundle\Controller\StoreAssemblerController::healthCheck
+
+store_assembler_item:
+    path: /store-assembler
+    methods: [POST]
+    controller: Sylius\StoreAssemblerBundle\Controller\StoreAssemblerController::processStorePreset
