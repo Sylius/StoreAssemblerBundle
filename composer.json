@@ -1,5 +1,5 @@
 {
-    "name": "sylius/store-assembler-bundle",
+    "name": "sylius/store-assembler",
     "type": "symfony-bundle",
     "description": "Sylius Store Assembler – tool to assemble Sylius stores from a set of configuration files.",
     "license": "MIT",
