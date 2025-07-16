@@ -38,7 +38,7 @@ class PluginPrepareCommand extends Command
             [$vendor, $name] = explode('/', $package, 2);
 
             $dirVersion = preg_replace('/^[^0-9]*/', '', $version);
-            $manifestDir = rtrim($this->projectDir, '/\\') . "/vendor/sylius/store-assembler-bundle/config/plugins/{$vendor}/{$name}/{$dirVersion}";
+            $manifestDir = rtrim($this->projectDir, '/\\') . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/{$dirVersion}";
             $manifestFile = $manifestDir . '/manifest.json';
 
             if (!is_file($manifestFile)) {
@@ -70,7 +70,7 @@ class PluginPrepareCommand extends Command
         }
 
         $this->io->title('[Plugin Preparer] Running Rector');
-        $rectorConfigPath = $this->projectDir . '/vendor/sylius/store-assembler-bundle/config/rector.php';
+        $rectorConfigPath = $this->projectDir . '/vendor/sylius/store-assembler/config/rector.php';
 
         $exitCode = $this->runCommand([
             'vendor/bin/rector',

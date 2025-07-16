@@ -22,7 +22,7 @@ final class ManifestLocator
         $parts = explode('/', $package, 2);
         $vendor = $parts[0] ?? 'sylius';
         $name = $parts[1] ?? $parts[0];
-        $baseDir = rtrim($projectDir, '/\\') . "/vendor/sylius/store-assembler-bundle/config/plugins/{$vendor}/{$name}/";
+        $baseDir = rtrim($projectDir, '/\\') . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/";
 
         if (!is_dir($baseDir)) {
             throw new \RuntimeException(
