@@ -11,22 +11,18 @@ final class ManifestLocator
     /**
      * Locate the best manifest.json for an installed plugin version.
      *
+     * @param string $projectDir Absolute path to project root
      * @param string $package    Package name, e.g. 'sylius/cms-plugin'
      *
      * @return string Absolute path to manifest.json
      * @throws \RuntimeException if no suitable manifest found or plugin unsupported
      */
-    public static function locate(string $package): string
+    public static function locate(string $projectDir, string $package): string
     {
         $parts = explode('/', $package, 2);
         $vendor = $parts[0] ?? 'sylius';
         $name = $parts[1] ?? $parts[0];
-        $packageName = ComposerPackageHelper::getOwnComposerName();
-        $assemblerBundlePath = InstalledVersions::getInstallPath($packageName);
-        if ($assemblerBundlePath === null) {
-            throw new \RuntimeException(sprintf('Cannot locate %s package in vendor directory.', $packageName));
-        }
-        $baseDir = rtrim($assemblerBundlePath, '/\\') . "/config/plugins/{$vendor}/{$name}/";
+        $baseDir = rtrim($projectDir, '/\\') . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/";
 
         if (!is_dir($baseDir)) {
             throw new \RuntimeException(
