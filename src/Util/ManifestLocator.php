@@ -21,9 +21,10 @@ final class ManifestLocator
         $parts = explode('/', $package, 2);
         $vendor = $parts[0] ?? 'sylius';
         $name = $parts[1] ?? $parts[0];
-        $assemblerBundlePath = InstalledVersions::getInstallPath('sylius/store-assembler-bundle');
+        $packageName = ComposerPackageHelper::getOwnComposerName();
+        $assemblerBundlePath = InstalledVersions::getInstallPath($packageName);
         if ($assemblerBundlePath === null) {
-            throw new \RuntimeException('Cannot locate sylius/store-assembler-bundle package in vendor directory.');
+            throw new \RuntimeException(sprintf('Cannot locate %s package in vendor directory.', $packageName));
         }
         $baseDir = rtrim($assemblerBundlePath, '/\\') . "/config/plugins/{$vendor}/{$name}/";
 
