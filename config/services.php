@@ -8,6 +8,7 @@ use Sylius\StoreAssemblerBundle\Command\PluginInstallCommand;
 use Sylius\StoreAssemblerBundle\Command\PluginPrepareCommand;
 use Sylius\StoreAssemblerBundle\Command\ThemePrepareCommand;
 use Sylius\StoreAssemblerBundle\Configurator\YamlNodeConfigurator;
+use Sylius\StoreAssemblerBundle\Controller\StoreAssemblerController;
 
 return static function (ContainerConfigurator $container): void {
     $services = $container->services();
@@ -54,5 +55,10 @@ return static function (ContainerConfigurator $container): void {
 
     $services
         ->set('sylius_store_assembler.configurator.yaml_node', YamlNodeConfigurator::class)
+    ;
+
+    $services
+        ->set('sylius_store_assembler.controller', StoreAssemblerController::class)
+        ->tag('controller.service_arguments')
     ;
 };
