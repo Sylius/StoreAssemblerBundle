@@ -10,6 +10,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
+use Sylius\StoreAssemblerBundle\Util\ManifestLocator;
+use Composer\InstalledVersions;
 
 #[AsCommand(
     name: 'sylius:store-assembler:plugin:prepare',
@@ -35,20 +37,15 @@ class PluginPrepareCommand extends Command
         $plugins = $this->getPlugins();
 
         foreach ($plugins as $package => $version) {
-            [$vendor, $name] = explode('/', $package, 2);
-
-            $dirVersion = preg_replace('/^[^0-9]*/', '', $version);
-            $manifestDir = rtrim($this->projectDir, '/\\') . "/vendor/sylius/store-assembler-bundle/config/plugins/{$vendor}/{$name}/{$dirVersion}";
-            $manifestFile = $manifestDir . '/manifest.json';
-
-            if (!is_file($manifestFile)) {
+            try {
+                ManifestLocator::locate($package);
+            } catch (\RuntimeException $e) {
                 $this->io->error(sprintf(
-                    'Plugin "%s"@"%s" is configured but not supported: missing manifest at "%s".',
+                    'Plugin "%s"@"%s" is configured but not supported: %s',
                     $package,
                     $version,
-                    $manifestDir
+                    $e->getMessage()
                 ));
-
                 return Command::FAILURE;
             }
         }
@@ -70,7 +67,11 @@ class PluginPrepareCommand extends Command
         }
 
         $this->io->title('[Plugin Preparer] Running Rector');
-        $rectorConfigPath = $this->projectDir . '/vendor/sylius/store-assembler-bundle/config/rector.php';
+        $assemblerBundlePath = InstalledVersions::getInstallPath('sylius/store-assembler-bundle');
+        if ($assemblerBundlePath === null) {
+            throw new \RuntimeException('Cannot locate sylius/store-assembler-bundle package in vendor directory.');
+        }
+        $rectorConfigPath = $assemblerBundlePath . '/config/rector.php';
 
         $exitCode = $this->runCommand([
             'vendor/bin/rector',
