@@ -163,7 +163,9 @@ TWIG;
         $twigContent = <<<TWIG
 {# templates/shop/logo.html.twig #}
 <div class="col">
-    <img src="{{ asset('build/app/shop/images/logo.png', 'app.shop') }}" alt="Banner shop" style="max-width:150px; height:auto;" />
+    <a href="{{ path('sylius_shop_homepage') }}">
+        <img src="{{ asset('build/app/shop/images/logo.png', 'app.shop') }}" alt="Banner shop" style="max-width:150px; height:auto;" />
+    </a>
 </div>
 TWIG;
         $this->filesystem->dumpFile($twigPath, $twigContent . "\n");

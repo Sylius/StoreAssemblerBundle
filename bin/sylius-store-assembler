@@ -37,7 +37,7 @@ EOF
 BUILD=false
 DEPLOY=false
 GET_PRESET=false
-PRESET_NAME=""
+PRESET_NAME=""R
 
 if [ $# -eq 0 ]; then
   BUILD=true
@@ -116,23 +116,6 @@ if $GET_PRESET; then
 
   echo -e "${GREEN}Done!${RESET}"
   exit 0
-fi
-# END preset download logic
-
-# -----------------------------------------
-# 2) Determine project root
-# -----------------------------------------
-PROJECT_DIR="$(pwd)"
-STORE_PRESET_FILE="$PROJECT_DIR/store-preset/store-preset.json"
-
-# -----------------------------------------
-# 3) Retrieve store name
-# -----------------------------------------
-if [ -f "$STORE_PRESET_FILE" ]; then
-  STORE_NAME=$(php -r "echo json_decode(file_get_contents('$STORE_PRESET_FILE'), true)['name'] ?? '';"
-)
-else
-  STORE_NAME=""
 fi
 
 # -----------------------------------------
