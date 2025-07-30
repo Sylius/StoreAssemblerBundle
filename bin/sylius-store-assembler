@@ -82,6 +82,17 @@ else
 fi
 
 # -----------------------------------------
+# 2) Ensure store-preset directory is ignored by GIT
+# -----------------------------------------
+if [ -f .gitignore ]; then
+  if ! grep -qx 'store-preset/' .gitignore; then
+    echo 'store-preset/' >> .gitignore
+  fi
+else
+  echo 'store-preset/' > .gitignore
+fi
+
+# -----------------------------------------
 # Preset download logic
 # -----------------------------------------
 if $GET_PRESET; then
