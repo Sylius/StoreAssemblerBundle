@@ -30,10 +30,8 @@ class FixtureLoadCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $store = $this->getStoreName();
-
         $io->section('[Fixture Loader] Loading fixtures suite');
-        $process = $this->runConsoleCommand([$store, '--no-interaction'], $io);
+        $process = $this->runConsoleCommand([$this->getFixturesSuiteName(), '--no-interaction'], $io);
         if ($process->getExitCode() !== 0) {
             $io->error('Fixtures loading failed.');
             return Command::FAILURE;
