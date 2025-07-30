@@ -76,6 +76,17 @@ else
 fi
 
 # -----------------------------------------
+# 2) Ensure store-preset directory is ignored by GIT
+# -----------------------------------------
+if [ -f .gitignore ]; then
+  if ! grep -qx 'store-preset/' .gitignore; then
+    echo 'store-preset/' >> .gitignore
+  fi
+else
+  echo 'store-preset/' > .gitignore
+fi
+
+# -----------------------------------------
 # Preset download logic
 # -----------------------------------------
 if $GET_PRESET; then
@@ -120,34 +131,10 @@ fi
 # END preset download logic
 
 # -----------------------------------------
-# 2) Determine project root
-# -----------------------------------------
-PROJECT_DIR="$(pwd)"
-STORE_PRESET_FILE="$PROJECT_DIR/store-preset/store-preset.json"
-
-# -----------------------------------------
-# 3) Retrieve store name
-# -----------------------------------------
-if [ -f "$STORE_PRESET_FILE" ]; then
-  STORE_NAME=$(php -r "echo json_decode(file_get_contents('$STORE_PRESET_FILE'), true)['name'] ?? '';"
-)
-else
-  STORE_NAME=""
-fi
-
-# -----------------------------------------
 # 4) BUILD
 # -----------------------------------------
 if $BUILD; then
   echo -e "${BLUE}${BOLD}=== [Store Assembler] BUILD ===${RESET}"
-  if [ -z "$STORE_NAME" ]; then
-    echo -e "${RED}Error:${RESET} Missing store-preset or 'name' key in $STORE_PRESET_FILE."
-    echo -e "To run BUILD, you must provide a valid store-preset/store-preset.json with a 'name'."
-    exit 1
-  fi
-
-  echo -e "Creating store: ${BOLD}$STORE_NAME${RESET}"
-  echo
 
   echo -e "${BLUE}[Store Assembler] PLUGINS${RESET}"
   php bin/console sylius:store-assembler:plugin:prepare
@@ -185,14 +172,10 @@ if $DEPLOY; then
   php bin/console cache:clear --no-warmup
   php bin/console cache:warmup
 
-  if [ -z "$STORE_NAME" ]; then
-    echo -e "${YELLOW}Warning:${RESET} No store configured in store-preset. Loading default fixtures."
-    php bin/console sylius:fixtures:load -n
-  else
-    echo
-    echo -e "${BLUE}[Store Assembler] FIXTURES${RESET}"
-    php bin/console sylius:store-assembler:fixture:load
-  fi
+
+  echo -e "${BLUE}[Store Assembler] FIXTURES${RESET}"
+  php bin/console sylius:store-assembler:fixture:load
+
 
   echo
   echo -e "${GREEN}[Store Assembler] DEPLOY completed successfully.${RESET}"
