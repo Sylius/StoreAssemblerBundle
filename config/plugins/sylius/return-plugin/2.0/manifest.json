@@ -1,4 +1,5 @@
 {
+    "type": "paid",
     "rector-sets": [
         "Sylius\\SyliusRector\\Set\\SyliusPlus::RETURN_PLUGIN"
     ],
