@@ -9,6 +9,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 #[AsCommand(
@@ -31,44 +32,132 @@ class PluginPrepareCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);
-
         $plugins = $this->getPlugins();
+
+        $openSource = [];
+        $paid = [];
 
         foreach ($plugins as $package => $version) {
             [$vendor, $name] = explode('/', $package, 2);
-
             $dirVersion = preg_replace('/^[^0-9]*/', '', $version);
-            $manifestDir = rtrim($this->projectDir, '/\\') . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/{$dirVersion}";
+
+            $manifestDir = rtrim($this->projectDir, '/\\')
+                . "/vendor/sylius/store-assembler/config/plugins/{$vendor}/{$name}/{$dirVersion}";
             $manifestFile = $manifestDir . '/manifest.json';
 
             if (!is_file($manifestFile)) {
                 $this->io->error(sprintf(
-                    'Plugin "%s"@"%s" is configured but not supported: missing manifest at "%s".',
+                    'Plugin "%s"@"%s" is configured but missing manifest.json in "%s".',
                     $package,
                     $version,
                     $manifestDir
                 ));
-
                 return Command::FAILURE;
+            }
+
+            $manifest = json_decode((string)file_get_contents($manifestFile), true);
+            $type = $manifest['type'] ?? 'open-source';
+
+            if (strtolower($type) === 'paid') {
+                $paid[$package] = $version;
+            } else {
+                $openSource[$package] = $version;
             }
         }
 
+        // 2) Always allow Symfony contrib
         (new Process(
             ['composer', 'config', 'extra.symfony.allow-contrib', 'true'],
             $this->projectDir
-        ))->run();
+        ))->mustRun();
 
-        $this->io->section('[Plugin Preparer] Installing plugins');
-        foreach ($plugins as $package => $version) {
-            $process = new Process(
-                ['composer', 'require', sprintf('%s:%s', $package, $version), '--no-scripts', '--no-interaction'],
-                $this->projectDir
-            );
-            $process
-                ->setTimeout(0)
-                ->mustRun(fn (string $type, string $buffer) => $output->write($buffer));
+        // 3) Install open-source plugins
+        if (!empty($openSource)) {
+            $this->io->section('[Plugin Preparer] Installing open-source plugins');
+            foreach ($openSource as $package => $version) {
+                $this->io->text(sprintf(' → %s:%s', $package, $version));
+                (new Process(
+                    ['composer', 'require', "{$package}:{$version}", '--no-scripts', '--no-interaction'],
+                    $this->projectDir
+                ))
+                    ->setTimeout(0)
+                    ->mustRun(fn($type, $buffer) => $output->write($buffer));
+            }
         }
 
+        // 4) Configure & install paid plugins
+        if (!empty($paid)) {
+            // 4a) Add the private Sylius repository
+            $this->io->section('[Plugin Preparer] Configuring private Sylius repository');
+            (new Process(
+                ['composer', 'config', 'repositories.sylius', 'composer', 'https://sylius.repo.packagist.com/sylius/'],
+                $this->projectDir
+            ))->mustRun();
+
+            // 4b) Check via Composer if HTTP-basic auth is already set
+            $this->io->section('[Plugin Preparer] Checking existing credentials');
+            $usernameCheck = new Process(
+                ['composer', 'config', '--auth', 'http-basic.sylius.repo.packagist.com.username'],
+                $this->projectDir
+            );
+            $passwordCheck = new Process(
+                ['composer', 'config', '--auth', 'http-basic.sylius.repo.packagist.com.password'],
+                $this->projectDir
+            );
+            $usernameCheck->run();
+            $passwordCheck->run();
+
+            $hasUsername = $usernameCheck->getExitCode() === 0 && trim($usernameCheck->getOutput()) !== '';
+            $hasPassword = $passwordCheck->getExitCode() === 0 && trim($passwordCheck->getOutput()) !== '';
+
+            if ($hasUsername && $hasPassword) {
+                $this->io->text('✔ Found existing credentials via Composer; skipping prompt.');
+            } else {
+                // 4c) Prompt for credentials
+                $username = $this->io->ask('Sylius repo username');
+                $token = $this->io->askHidden('Sylius repo token');
+
+                (new Process(
+                    ['composer', 'config', '--auth', 'http-basic.sylius.repo.packagist.com', $username, $token],
+                    $this->projectDir
+                ))->mustRun();
+            }
+
+            // 4d) Dry‑run install to verify access
+            $this->io->section('[Plugin Preparer] Verifying access (dry‑run)');
+            foreach ($paid as $package => $version) {
+                $this->io->text(sprintf(' 🔍 Testing %s:%s', $package, $version));
+                try {
+                    (new Process(
+                        ['composer', 'require', "{$package}:{$version}", '--no-scripts', '--no-interaction', '--dry-run'],
+                        $this->projectDir
+                    ))
+                        ->setTimeout(0)
+                        ->mustRun();
+                } catch (ProcessFailedException $e) {
+                    $this->io->error(sprintf(
+                        'Access denied for %s:%s. Please verify your token and repository credentials.',
+                        $package,
+                        $version
+                    ));
+                    return Command::FAILURE;
+                }
+            }
+
+            // 4e) Actual install of paid plugins
+            $this->io->section('[Plugin Preparer] Installing paid plugins');
+            foreach ($paid as $package => $version) {
+                $this->io->text(sprintf(' → %s:%s', $package, $version));
+                (new Process(
+                    ['composer', 'require', "{$package}:{$version}", '--no-scripts', '--no-interaction'],
+                    $this->projectDir
+                ))
+                    ->setTimeout(0)
+                    ->mustRun(fn($type, $buffer) => $output->write($buffer));
+            }
+        }
+
+        // 5) Run Rector
         $this->io->title('[Plugin Preparer] Running Rector');
         $rectorConfigPath = $this->projectDir . '/vendor/sylius/store-assembler/config/rector.php';
 
@@ -85,8 +174,7 @@ class PluginPrepareCommand extends Command
         }
 
         $this->io->success('Rector completed successfully.');
-
-        $this->io->success('[Plugin Preparer] Plugins installed successfully.');
+        $this->io->success('[Plugin Preparer] All plugins installed successfully.');
 
         return Command::SUCCESS;
     }
@@ -97,7 +185,7 @@ class PluginPrepareCommand extends Command
         $process
             ->setTty(Process::isTtySupported())
             ->setTimeout(0)
-            ->mustRun(fn (string $type, string $buffer) => $this->io->write($buffer));
+            ->mustRun(fn($type, $buffer) => $this->io->write($buffer));
 
         return $process->getExitCode();
     }

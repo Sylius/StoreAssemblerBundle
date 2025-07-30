@@ -37,6 +37,7 @@ class ThemePrepareCommand extends Command
         $this->io = new SymfonyStyle($input, $output);
 
         $this->copyAssets();
+        $this->appendThemeImports();
 
         $process = Process::fromShellCommandline('yarn encore dev', $this->projectDir);
         $process->run(function (string $type, string $buffer) {
@@ -86,6 +87,29 @@ class ThemePrepareCommand extends Command
             targetDir: $this->projectDir . '/assets',
             options: ['override' => true]
         );
+        $this->io->success('Assets copied to ' . $this->projectDir . '/assets');
+    }
+
+    private function appendThemeImports(): void
+    {
+        $shopEntrypoint = $this->projectDir . '/assets/shop/entrypoint.js';
+        $adminEntrypoint = $this->projectDir . '/assets/admin/entrypoint.js';
+
+        $importLine = "import './styles/theme.scss';" . PHP_EOL;
+
+        if ($this->filesystem->exists($shopEntrypoint)) {
+            file_put_contents($shopEntrypoint, $importLine, FILE_APPEND);
+            $this->io->success('Appended theme import to ' . $shopEntrypoint);
+        } else {
+            $this->io->warning('Shop entrypoint not found at: ' . $shopEntrypoint);
+        }
+
+        if ($this->filesystem->exists($adminEntrypoint)) {
+            file_put_contents($adminEntrypoint, $importLine, FILE_APPEND);
+            $this->io->success('Appended theme import to ' . $adminEntrypoint);
+        } else {
+            $this->io->warning('Admin entrypoint not found at: ' . $adminEntrypoint);
+        }
     }
 
     private function overrideLogo(string $section, mixed $hooksConfig): array
@@ -108,6 +132,7 @@ class ThemePrepareCommand extends Command
 
         return $hooksConfig;
     }
+
     private function disableLatestDealsHookable(mixed $hooksConfig): array
     {
         $hooksConfig['sylius_twig_hooks']['hooks']['sylius_shop.homepage.index']['latest_deals']['enabled'] = false;

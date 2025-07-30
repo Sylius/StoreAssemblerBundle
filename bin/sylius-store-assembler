@@ -3,7 +3,7 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 #   Script: store-assembler
-#   Orchestrates the BUILD, DEPLOY, and GET-PRESET operations for a Sylius store.
+#   Orchestrates the BUILD, DEPLOY, GET-PRESET, and ONLY-PLUGINS operations for a Sylius store.
 #   Supports downloading and extracting store presets by name.
 # -----------------------------------------------------------------------------
 
@@ -17,11 +17,12 @@ RESET=$'\033[0m'
 
 usage() {
   cat <<EOF
-${BOLD}Usage:${RESET} $(basename "$0") [--build] [--deploy] [--get-preset <preset-name>]
+${BOLD}Usage:${RESET} $(basename "$0") [--build] [--deploy] [--get-preset <preset-name>] [--only-plugins]
 
-  --build    Execute store build steps (plugins, fixtures, themes)
-  --deploy   Execute store deployment steps (drop/create DB, update schema, load fixtures)
+  --build            Execute store build steps (plugins, fixtures, themes)
+  --deploy           Execute store deployment steps (drop/create DB, update schema, load fixtures)
   --get-preset <preset-name>   Download and extract a store-preset by name
+  --only-plugins     Execute only the plugin preparation commands and exit
 
 If no flags are provided, both --build and --deploy sections will be executed sequentially.
 
@@ -37,7 +38,8 @@ EOF
 BUILD=false
 DEPLOY=false
 GET_PRESET=false
-PRESET_NAME=""R
+ONLY_PLUGINS=false
+PRESET_NAME=""
 
 if [ $# -eq 0 ]; then
   BUILD=true
@@ -63,14 +65,18 @@ else
           usage
         fi
         ;;
+      --only-plugins)
+        ONLY_PLUGINS=true
+        shift
+        ;;
       *)
         usage
         ;;
     esac
   done
 
-  if ! $BUILD && ! $DEPLOY && ! $GET_PRESET; then
-    echo -e "${RED}Error:${RESET} You must specify at least --build, --deploy, or --get-preset."
+  if ! $BUILD && ! $DEPLOY && ! $GET_PRESET && ! $ONLY_PLUGINS; then
+    echo -e "${RED}Error:${RESET} You must specify at least --build, --deploy, --get-preset, or --only-plugins."
     usage
   fi
 fi
@@ -115,6 +121,22 @@ if $GET_PRESET; then
   rm -rf "$TMP_DIR"
 
   echo -e "${GREEN}Done!${RESET}"
+  exit 0
+fi
+
+# -----------------------------------------
+# Only plugins logic
+# -----------------------------------------
+if $ONLY_PLUGINS; then
+  echo -e "${BLUE}${BOLD}=== [Store Assembler] ONLY-PLUGINS ===${RESET}"
+  echo -e "${BLUE}[Store Assembler] PLUGINS${RESET}"
+  php bin/console sylius:store-assembler:plugin:prepare
+  php bin/console assets:install --symlink --relative public
+  php bin/console cache:clear --no-warmup
+  php bin/console cache:warmup
+  php bin/console sylius:store-assembler:plugin:install
+
+  echo -e "${GREEN}[Store Assembler] PLUGINS completed successfully.${RESET}"
   exit 0
 fi
 
