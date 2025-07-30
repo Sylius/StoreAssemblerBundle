@@ -1,0 +1,6 @@
+{
+    "type": "paid",
+    "rector-sets": [
+        "Sylius\\SyliusRector\\Set\\SyliusPlus::RFQ_PLUGIN"
+    ]
+}
