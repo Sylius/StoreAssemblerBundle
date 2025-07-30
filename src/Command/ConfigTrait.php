@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Sylius\StoreAssemblerBundle\Command;
 
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Yaml\Yaml;
+
 /** @experimental */
 trait ConfigTrait
 {
@@ -21,9 +24,20 @@ trait ConfigTrait
         }
     }
 
-    public function getStoreName(): string
+    public function getFixturesSuiteName(): string
     {
-        return $this->getConfig()['name'];
+        $filePath = $this->getFixturesFilePath();
+        $filesystem = new Filesystem();
+        if (!$filesystem->exists($filePath)) {
+            throw new \RuntimeException(sprintf('Fixtures file not found: %s', $filePath));
+        }
+        $config = Yaml::parseFile($filePath);
+        $suiteName = array_keys($config['sylius_fixtures']['suites'])[0] ?? null;
+        if ($suiteName === null) {
+            throw new \RuntimeException(sprintf('No fixtures suite found in file: %s', $filePath));
+        }
+
+        return $suiteName;
     }
 
     public function getPlugins(): array
@@ -37,7 +51,7 @@ trait ConfigTrait
         return $config['plugins'];
     }
 
-    public function getFixturesPath(): string
+    public function getFixturesFilePath(): string
     {
         $fixturesPath = sprintf('%s/store-preset/fixtures/fixtures.yaml', $this->projectDir);
 

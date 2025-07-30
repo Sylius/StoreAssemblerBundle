@@ -32,14 +32,14 @@ class FixturePrepareCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $fixturesPath = $this->getFixturesPath();
+        $fixturesFilePath = $this->getFixturesFilePath();
 
         $io->section('[Fixture Loader] Preparing fixtures suite');
 
         $filesystem = new Filesystem();
         $target = $this->projectDir . '/config/packages/fixtures.yaml';
         try {
-            $filesystem->copy($fixturesPath, $target, true);
+            $filesystem->copy($fixturesFilePath, $target, true);
         } catch (IOExceptionInterface $exception) {
             $io->error(sprintf('Failed to copy fixtures file: %s', $exception->getMessage()));
             return Command::FAILURE;
