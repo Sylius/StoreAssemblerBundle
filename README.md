@@ -4,4 +4,4 @@ Sylius Store Assembler is a Symfony bundle that streamlines creating and configu
 using store presets.
 
 For the latest documentation, please visit
-the [Sylius Store Assembler documentation](https://docs.sylius.com/sylius-plugins/experimental/demo-creator).
+the [Sylius Store Assembler documentation](https://docs.sylius.com/experimental/store-wizard#store-assembler).
