@@ -1,0 +1,6 @@
+{
+    "type": "community",
+    "steps": [
+        "yarn add @nmipayments/nmi-pay"
+    ]
+}
